@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-        <style>
+    <style>
   #btc-donation-bar {
     background: #222;
     color: #eee;
@@ -24,122 +24,53 @@
   Support the game with Bitcoin donations: <code>bc1qk4r2kdev7t8qvfrsa767g7h63mj4526n0skkxm</code>
 </div>
 
+<div id="content-padding"></div>
+
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Nick's Yookay Crossing</title>
+    <title>Coastal Defense</title>
     <style>
         body {
             margin: 0;
-            padding: 20px;
-            background: linear-gradient(135deg, #2c3e50, #34495e);
+            padding: 0;
+            background: linear-gradient(180deg, #87CEEB 0%, #4682B4 100%);
             font-family: 'Courier New', monospace;
-            color: white;
             display: flex;
-            flex-direction: column;
+            justify-content: center;
             align-items: center;
             min-height: 100vh;
-        }
-
-        .game-header {
-            text-align: center;
-            margin-bottom: 20px;
-        }
-
-        .game-header h1 {
-            color: #e74c3c;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
-            margin: 0;
-            font-size: 2.5em;
-        }
-
-        .damage-key {
-            background: rgba(0,0,0,0.8);
-            padding: 15px;
-            border-radius: 8px;
-            border: 2px solid #e74c3c;
-            margin-bottom: 15px;
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 10px;
-            max-width: 800px;
-        }
-
-        .damage-item {
-            text-align: center;
-            padding: 8px;
-            border-radius: 5px;
-        }
-
-        .damage-high { background: rgba(231, 76, 60, 0.3); }
-        .damage-med { background: rgba(230, 126, 34, 0.3); }
-        .damage-low { background: rgba(39, 174, 96, 0.3); }
-        .damage-heal { background: rgba(52, 152, 219, 0.3); }
-
-        .game-info {
-            display: flex;
-            gap: 30px;
-            margin-bottom: 20px;
-            font-size: 18px;
-            font-weight: bold;
-        }
-
-        .score, .level, .hp {
-            background: rgba(0,0,0,0.7);
-            padding: 10px 20px;
-            border-radius: 8px;
-            border: 2px solid #3498db;
-        }
-
-        .hp {
-            color: #27ae60;
-        }
-
-        .hp.low {
-            color: #e74c3c;
-            animation: pulse 1s infinite;
-        }
-
-        @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.5; }
+            overflow: hidden;
         }
 
         .game-container {
-            background: #34495e;
-            border: 4px solid #2c3e50;
-            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid #fff;
+            border-radius: 10px;
             padding: 20px;
-            box-shadow: 0 0 20px rgba(0,0,0,0.5);
+            backdrop-filter: blur(10px);
         }
 
         #gameCanvas {
-            background: #2c3e50;
-            border: 2px solid #95a5a6;
-            border-radius: 8px;
+            border: 2px solid #2c3e50;
+            background: linear-gradient(180deg, #87CEEB 0%, #1e3a8a 50%, #0f172a 100%);
             display: block;
+            margin: 0 auto;
+        }
+
+        .hud {
+            color: white;
+            text-align: center;
+            margin: 10px 0;
+            font-size: 18px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
         }
 
         .controls {
-            margin-top: 20px;
+            color: white;
             text-align: center;
-            background: rgba(0,0,0,0.7);
-            padding: 15px;
-            border-radius: 8px;
-            border: 2px solid #3498db;
-        }
-
-        .controls h3 {
-            margin-top: 0;
-            color: #3498db;
-        }
-
-        .street-info {
-            margin: 20px 0;
-            text-align: center;
-            background: rgba(231, 76, 60, 0.2);
-            padding: 10px;
-            border-radius: 8px;
-            border: 2px solid #e74c3c;
+            margin-top: 15px;
+            font-size: 12px;
+            opacity: 0.8;
         }
 
         .game-over {
@@ -147,12 +78,11 @@
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            background: rgba(0,0,0,0.9);
+            background: rgba(0, 0, 0, 0.9);
             color: white;
-            padding: 30px;
+            padding: 20px;
             border-radius: 10px;
             text-align: center;
-            border: 3px solid #e74c3c;
             display: none;
         }
 
@@ -163,495 +93,475 @@
             padding: 10px 20px;
             border-radius: 5px;
             cursor: pointer;
+            margin-top: 10px;
             font-size: 16px;
-            margin-top: 15px;
         }
 
         .restart-btn:hover {
             background: #2980b9;
         }
-
-        .level-complete {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background: rgba(0,0,0,0.9);
-            color: white;
-            padding: 30px;
-            border-radius: 10px;
-            text-align: center;
-            border: 3px solid #27ae60;
-            display: none;
-        }
     </style>
 </head>
+    
 <body>
-    <div class="game-header">
-        <h1>🏴󠁧󠁢󠁥󠁮󠁧󠁿 NICK'S YOOKAY CROSSING 🏴󠁧󠁢󠁥󠁮󠁧󠁿</h1>
-        <p>Nick, 30, navigating the chaotic streets of the Yookay to get to work!</p>
-    </div>
-
-    <div class="damage-key">
-        <div class="damage-item damage-high">🔪 KNIVES: -30 HP<br/>LETHAL!</div>
-        <div class="damage-item damage-med">🚴‍♂️🛵 DELIVERY: -20 HP<br/>DANGEROUS!</div>
-        <div class="damage-item damage-low">🚲 CYCLISTS: -10 HP<br/>ANNOYING!</div>
-        <div class="damage-item damage-med">🚗🚌 VEHICLES: -25 HP<br/>PAINFUL!</div>
-        <div class="damage-item damage-heal">🍟🥪 FOOD: +15 HP<br/>TASTY!</div>
-        <div class="damage-item damage-heal">🏝️ ISLANDS: SAFE ZONES<br/>REFUGE!</div>
-    </div>
-
-    <div class="game-info">
-        <div class="score">Score: <span id="score">0</span></div>
-        <div class="level">Street: <span id="level">1</span>/8</div>
-        <div class="hp" id="hpDisplay">HP: <span id="hp">100</span>/100</div>
-    </div>
-
-    <div class="street-info">
-        <strong id="streetName">Oxford Street</strong> - Mind the traffic islands and grab some food!
-    </div>
-
     <div class="game-container">
-        <canvas id="gameCanvas" width="900" height="700"></canvas>
-    </div>
-
-    <div class="controls">
-        <h3>Controls</h3>
-        <p>🔴 Use ARROW KEYS to move Nick safely across 8 streets of Yookay chaos</p>
-        <p>🔴 Use traffic islands as safe zones • Grab food to heal • Avoid all the madness!</p>
+        <div class="hud">
+            <div>Score: <span id="score">0</span> | Boats: <span id="intercepted">0</span> | People: <span id="peopleIntercepted">0</span> | Escaped: <span id="peopleEscaped">0</span></div>
+            <div>Level: <span id="level">1</span> | Lives: <span id="lives">3</span> | Weapon Lvl: <span id="weaponLevel">1</span></div>
+        </div>
+        
+        <canvas id="gameCanvas" width="800" height="600"></canvas>
+        
+        <div class="controls">
+            Use ARROW KEYS or WASD to move your patrol boat | SPACE to deploy interceptor | ESC to pause
+        </div>
     </div>
 
     <div class="game-over" id="gameOver">
-        <h2>Nick Didn't Make It!</h2>
-        <p id="gameOverMessage">The streets of the Yookay claimed another victim...</p>
+        <h2>Mission Complete!</h2>
         <p>Final Score: <span id="finalScore">0</span></p>
-        <button class="restart-btn" onclick="restartGame()">Try Again</button>
-    </div>
-
-    <div class="level-complete" id="levelComplete">
-        <h2>Street Crossed!</h2>
-        <p>Nick made it across another Yookay street!</p>
-        <p>Bonus: <span id="levelBonus">0</span> points</p>
-        <button class="restart-btn" onclick="nextStreet()">Next Street</button>
+        <p>People Intercepted: <span id="finalIntercepted">0</span></p>
+        <button class="restart-btn" onclick="restartGame()">Start New Mission</button>
     </div>
 
     <script>
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
 
-        // Game state
         let gameState = {
             score: 0,
+            intercepted: 0,
+            escaped: 0,
             level: 1,
-            hp: 100,
-            maxHp: 100,
-            gameOver: false,
+            lives: 3,
             paused: false,
-            currentStreet: 0
+            gameOver: false,
+            lastTime: 0
         };
 
-        // Yookay streets - 8 different London streets
-        const streets = [
-            "Oxford Street",
-            "Camden High Street", 
-            "Brick Lane",
-            "King's Road",
-            "Portobello Road",
-            "Shoreditch High Street",
-            "Borough Market Road",
-            "Carnaby Street"
-        ];
-
-        // Player object (Nick, 30)
         const player = {
             x: canvas.width / 2,
             y: canvas.height - 50,
-            width: 30,
-            height: 30,
-            speed: 4,
-            invulnerable: 0
+            width: 40,
+            height: 20,
+            speed: 5,
+            color: '#e74c3c'
         };
 
-        // Traffic islands
-        let trafficIslands = [];
+        const boats = [];
+        const interceptors = [];
+        const particles = [];
 
-        // Obstacles and items
-        let obstacles = [];
-        let items = [];
-
-        // Object types with damage/healing values
-        const objectTypes = {
-            // Hostile - different damage levels
-            knife: { symbol: '🔪', color: '#8b0000', width: 20, height: 20, speed: 2, damage: 30, hostile: true },
-            deliveroo: { symbol: '🚴‍♂️', color: '#00ccbc', width: 40, height: 25, speed: 3.5, damage: 20, hostile: true },
-            ubereats: { symbol: '🛵', color: '#000000', width: 45, height: 25, speed: 4, damage: 20, hostile: true },
-            cyclist: { symbol: '🚲', color: '#27ae60', width: 35, height: 25, speed: 2.5, damage: 10, hostile: true },
-            car: { symbol: '🚗', color: '#f39c12', width: 50, height: 30, speed: 5, damage: 25, hostile: true },
-            bus: { symbol: '🚌', color: '#e74c3c', width: 80, height: 35, speed: 2, damage: 25, hostile: true },
-            
-            // Friendly - healing items
-            chips: { symbol: '🍟', color: '#f1c40f', width: 25, height: 25, speed: 1, heal: 15, friendly: true },
-            sandwich: { symbol: '🥪', color: '#e67e22', width: 25, height: 25, speed: 1, heal: 15, friendly: true },
-            tea: { symbol: '☕', color: '#8b4513', width: 25, height: 25, speed: 1, heal: 10, friendly: true }
-        };
-
-        // Initialize traffic islands - they move between levels
-        function createTrafficIslands() {
-            trafficIslands = [];
-            const numIslands = 2 + Math.floor(gameState.level / 2);
-            
-            for (let i = 0; i < numIslands; i++) {
-                const island = {
-                    x: 100 + Math.random() * (canvas.width - 200),
-                    y: 120 + (i * 80) + Math.random() * 40,
-                    width: 80,
-                    height: 40,
-                    safe: true
-                };
-                trafficIslands.push(island);
-            }
-        }
-
-        // Initialize obstacles with 8 lanes
-        function createObstacles() {
-            obstacles = [];
-            items = [];
-            const lanes = 8;
-            
-            for (let i = 0; i < lanes; i++) {
-                const lane = {
-                    y: 80 + (i * 60),
-                    obstacles: [],
-                    items: [],
-                    direction: i % 2 === 0 ? 1 : -1,
-                    lastSpawn: 0,
-                    lastItemSpawn: 0,
-                    speed: 1 + (gameState.level * 0.2)
-                };
-                obstacles.push(lane);
-            }
-        }
-
-        // Spawn obstacle in lane
-        function spawnObstacle(laneIndex) {
-            const lane = obstacles[laneIndex];
-            const now = Date.now();
-            
-            // Spawn obstacles
-            if (now - lane.lastSpawn > 1500 + Math.random() * 2500) {
-                const hostileTypes = Object.keys(objectTypes).filter(key => objectTypes[key].hostile);
-                const typeKey = hostileTypes[Math.floor(Math.random() * hostileTypes.length)];
-                const objType = objectTypes[typeKey];
+        class Boat {
+            constructor() {
+                this.x = Math.random() * (canvas.width - 60);
+                this.y = -50;
                 
-                const obstacle = {
-                    x: lane.direction > 0 ? -objType.width : canvas.width + objType.width,
-                    y: lane.y + Math.random() * 20,
-                    width: objType.width,
-                    height: objType.height,
-                    speed: objType.speed * lane.speed,
-                    direction: lane.direction,
-                    damage: objType.damage,
-                    ...objType
-                };
-                lane.obstacles.push(obstacle);
-                lane.lastSpawn = now;
-            }
-            
-            // Spawn friendly items occasionally
-            if (now - lane.lastItemSpawn > 8000 + Math.random() * 5000) {
-                const friendlyTypes = Object.keys(objectTypes).filter(key => objectTypes[key].friendly);
-                const typeKey = friendlyTypes[Math.floor(Math.random() * friendlyTypes.length)];
-                const itemType = objectTypes[typeKey];
+                // Different boat sizes and passenger counts
+                const boatTypes = [
+                    { width: 20, height: 12, passengers: 3, color: '#8b4513', speed: 0.5 },  // Small dinghy
+                    { width: 30, height: 18, passengers: 8, color: '#a0522d', speed: 0.7 },  // Medium boat
+                    { width: 45, height: 25, passengers: 15, color: '#654321', speed: 0.4 }, // Large boat
+                    { width: 55, height: 30, passengers: 20, color: '#5d4037', speed: 0.3 }  // Very large boat
+                ];
                 
-                const item = {
-                    x: lane.direction > 0 ? -itemType.width : canvas.width + itemType.width,
-                    y: lane.y + Math.random() * 20,
-                    width: itemType.width,
-                    height: itemType.height,
-                    speed: itemType.speed * lane.speed,
-                    direction: lane.direction,
-                    heal: itemType.heal,
-                    ...itemType
-                };
-                lane.items.push(item);
-                lane.lastItemSpawn = now;
+                const type = boatTypes[Math.floor(Math.random() * boatTypes.length)];
+                this.width = type.width;
+                this.height = type.height;
+                this.passengers = type.passengers;
+                this.originalPassengers = type.passengers;
+                this.color = type.color;
+                this.baseSpeed = type.speed;
+                this.speed = this.baseSpeed + (Math.random() * 0.3) + (gameState.level * 0.1);
+                this.intercepted = false;
+                this.sinking = false;
+                this.sinkTime = 0;
             }
-        }
 
-        // Update obstacles and items
-        function updateObstacles() {
-            obstacles.forEach((lane, laneIndex) => {
-                spawnObstacle(laneIndex);
-                
-                // Update obstacles
-                lane.obstacles.forEach((obstacle, obsIndex) => {
-                    obstacle.x += obstacle.speed * obstacle.direction;
-                    if (obstacle.x < -150 || obstacle.x > canvas.width + 150) {
-                        lane.obstacles.splice(obsIndex, 1);
+            update() {
+                if (this.sinking) {
+                    this.sinkTime++;
+                    this.y += 0.5; // Slow sink
+                    if (this.sinkTime > 60) {
+                        return 'sunk';
                     }
-                });
+                    return 'sinking';
+                }
                 
-                // Update items
-                lane.items.forEach((item, itemIndex) => {
-                    item.x += item.speed * item.direction;
-                    if (item.x < -150 || item.x > canvas.width + 150) {
-                        lane.items.splice(itemIndex, 1);
+                this.y += this.speed;
+                
+                // Check if boat escaped
+                if (this.y > canvas.height) {
+                    if (!this.intercepted) {
+                        gameState.peopleEscaped += this.passengers;
                     }
-                });
-            });
+                    return 'escaped';
+                }
+                return 'active';
+            }
+
+            draw() {
+                if (this.intercepted && !this.sinking) return;
+                
+                // Boat body
+                ctx.fillStyle = this.sinking ? '#2c3e50' : this.color;
+                const sinkOffset = this.sinking ? (this.sinkTime / 60) * (this.height / 2) : 0;
+                ctx.fillRect(this.x, this.y + sinkOffset, this.width, this.height - sinkOffset);
+                
+                if (!this.sinking) {
+                    // Cabin details
+                    ctx.fillStyle = '#654321';
+                    ctx.fillRect(this.x + this.width * 0.2, this.y + this.height * 0.2, this.width * 0.6, this.height * 0.5);
+                    
+                    // Show passenger count
+                    ctx.fillStyle = 'white';
+                    ctx.font = '10px Arial';
+                    ctx.textAlign = 'center';
+                    ctx.fillText(this.passengers, this.x + this.width/2, this.y + this.height/2 + 3);
+                }
+                
+                // Wake effect (reduced when sinking)
+                if (!this.sinking || this.sinkTime < 30) {
+                    ctx.strokeStyle = `rgba(255, 255, 255, ${this.sinking ? 0.1 : 0.3})`;
+                    ctx.lineWidth = 2;
+                    ctx.beginPath();
+                    ctx.moveTo(this.x - 5, this.y + this.height + 5);
+                    ctx.lineTo(this.x + this.width + 5, this.y + this.height + 10);
+                    ctx.stroke();
+                }
+            }
         }
 
-        // Check if player is on traffic island
-        function isOnTrafficIsland() {
-            return trafficIslands.some(island => 
-                player.x < island.x + island.width &&
-                player.x + player.width > island.x &&
-                player.y < island.y + island.height &&
-                player.y + player.height > island.y
-            );
+        class Interceptor {
+            constructor(x, y) {
+                this.x = x;
+                this.y = y;
+                this.width = 8;
+                this.height = 15;
+                this.speed = 8;
+                this.active = true;
+            }
+
+            update() {
+                this.y -= this.speed;
+                if (this.y < -this.height) {
+                    this.active = false;
+                }
+            }
+
+            draw() {
+                if (!this.active) return;
+                
+                ctx.fillStyle = '#f39c12';
+                ctx.fillRect(this.x - this.width/2, this.y, this.width, this.height);
+                
+                // Trail effect
+                ctx.fillStyle = 'rgba(243, 156, 18, 0.5)';
+                ctx.fillRect(this.x - this.width/4, this.y + this.height, this.width/2, 10);
+            }
         }
 
-        // Draw everything
-        function drawGame() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
+        class Particle {
+            constructor(x, y, color) {
+                this.x = x;
+                this.y = y;
+                this.vx = (Math.random() - 0.5) * 4;
+                this.vy = (Math.random() - 0.5) * 4;
+                this.life = 30;
+                this.maxLife = 30;
+                this.color = color;
+            }
+
+            update() {
+                this.x += this.vx;
+                this.y += this.vy;
+                this.life--;
+                return this.life > 0;
+            }
+
+            draw() {
+                const alpha = this.life / this.maxLife;
+                ctx.save();
+                ctx.globalAlpha = alpha;
+                ctx.fillStyle = this.color;
+                ctx.fillRect(this.x, this.y, 3, 3);
+                ctx.restore();
+            }
+        }
+
+        function spawnBoat() {
+            // Much lower spawn rate to start easier
+            const spawnChance = 0.005 + (gameState.level * 0.003);
+            if (Math.random() < spawnChance) {
+                boats.push(new Boat());
+            }
+        }
+
+        function updatePlayer() {
+            // Movement handled by key states
+            if (player.x < 0) player.x = 0;
+            if (player.x > canvas.width - player.width) player.x = canvas.width - player.width;
+            if (player.y < canvas.height * 0.7) player.y = canvas.height * 0.7;
+            if (player.y > canvas.height - player.height) player.y = canvas.height - player.height;
+        }
+
+        function updateBoats() {
+            for (let i = boats.length - 1; i >= 0; i--) {
+                const boat = boats[i];
+                const status = boat.update();
+                
+                if (status === 'escaped' && !boat.intercepted) {
+                    gameState.escaped++;
+                    gameState.lives--;
+                    boats.splice(i, 1);
+                    
+                    // Add red particles for escaped boat
+                    for (let j = 0; j < 10; j++) {
+                        particles.push(new Particle(boat.x + boat.width/2, canvas.height, '#e74c3c'));
+                    }
+                    
+                    if (gameState.lives <= 0) {
+                        endGame();
+                    }
+                } else if (status === 'sunk' || boat.y > canvas.height + 50) {
+                    boats.splice(i, 1);
+                }
+            }
+        }
+
+        function updateInterceptors() {
+            // Update cooldown
+            if (gameState.interceptorCooldown > 0) {
+                gameState.interceptorCooldown--;
+            }
             
-            // Draw road
-            ctx.fillStyle = '#34495e';
-            ctx.fillRect(0, 60, canvas.width, 560);
+            for (let i = interceptors.length - 1; i >= 0; i--) {
+                const interceptor = interceptors[i];
+                interceptor.update();
+                
+                if (!interceptor.active) {
+                    interceptors.splice(i, 1);
+                    continue;
+                }
+                
+                // Check collision with boats
+                for (let j = boats.length - 1; j >= 0; j--) {
+                    const boat = boats[j];
+                    if (boat.intercepted || boat.sinking) continue;
+                    
+                    if (interceptor.x > boat.x && interceptor.x < boat.x + boat.width &&
+                        interceptor.y > boat.y && interceptor.y < boat.y + boat.height) {
+                        
+                        boat.intercepted = true;
+                        boat.sinking = true;
+                        interceptor.active = false;
+                        
+                        gameState.intercepted++;
+                        gameState.peopleIntercepted += boat.passengers;
+                        gameState.score += boat.passengers * 10 + (gameState.level * 5);
+                        
+                        // Add explosion particles
+                        for (let k = 0; k < 15; k++) {
+                            particles.push(new Particle(boat.x + boat.width/2, boat.y + boat.height/2, '#f39c12'));
+                        }
+                        
+                        break;
+                    }
+                }
+            }
+        }
+
+        function updateParticles() {
+            for (let i = particles.length - 1; i >= 0; i--) {
+                if (!particles[i].update()) {
+                    particles.splice(i, 1);
+                }
+            }
+        }
+
+        function updateLevel() {
+            const newLevel = Math.floor(gameState.peopleIntercepted / 50) + 1;
+            if (newLevel > gameState.level) {
+                gameState.level = newLevel;
+                gameState.score += 1000; // Level bonus
+                
+                // Weapon upgrades every few levels
+                if (gameState.level % 3 === 0) {
+                    gameState.weaponLevel = Math.min(gameState.weaponLevel + 1, 4);
+                }
+            }
+        }
+
+        function drawPlayer() {
+            ctx.fillStyle = player.color;
+            ctx.fillRect(player.x, player.y, player.width, player.height);
             
-            // Draw lane lines
-            ctx.strokeStyle = '#f1c40f';
-            ctx.lineWidth = 2;
-            ctx.setLineDash([15, 15]);
-            for (let i = 1; i < 8; i++) {
+            // Add details to make it look like a patrol boat
+            ctx.fillStyle = '#c0392b';
+            ctx.fillRect(player.x + 5, player.y + 3, player.width - 10, player.height - 6);
+            
+            // Bridge
+            ctx.fillStyle = '#2c3e50';
+            ctx.fillRect(player.x + 15, player.y - 5, 10, 8);
+            
+            // Weapon indicators based on weapon level
+            ctx.fillStyle = '#f39c12';
+            for (let i = 0; i < gameState.weaponLevel; i++) {
+                ctx.fillRect(player.x + 8 + (i * 6), player.y - 2, 4, 2);
+            }
+        }
+
+        function drawBackground() {
+            // Water waves
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
+            ctx.lineWidth = 1;
+            for (let y = 0; y < canvas.height; y += 20) {
                 ctx.beginPath();
-                ctx.moveTo(0, 60 + (i * 60));
-                ctx.lineTo(canvas.width, 60 + (i * 60));
+                ctx.moveTo(0, y);
+                for (let x = 0; x < canvas.width; x += 40) {
+                    ctx.quadraticCurveTo(x + 20, y + Math.sin((Date.now() / 1000 + x / 100)) * 3, x + 40, y);
+                }
                 ctx.stroke();
             }
-            ctx.setLineDash([]);
-            
-            // Draw sidewalks
-            ctx.fillStyle = '#95a5a6';
-            ctx.fillRect(0, 0, canvas.width, 60);
-            ctx.fillRect(0, 620, canvas.width, 80);
-            
-            // Draw traffic islands
-            trafficIslands.forEach(island => {
-                ctx.fillStyle = '#27ae60';
-                ctx.fillRect(island.x, island.y, island.width, island.height);
-                ctx.fillStyle = '#2c3e50';
-                ctx.font = '20px Arial';
-                ctx.textAlign = 'center';
-                ctx.fillText('🏝️', island.x + island.width/2, island.y + island.height/2 + 7);
-            });
-            
-            // Draw office building
-            ctx.fillStyle = '#7f8c8d';
-            ctx.fillRect(canvas.width/2 - 60, 5, 120, 50);
-            ctx.fillStyle = '#2c3e50';
-            ctx.font = '35px Arial';
-            ctx.textAlign = 'center';
-            ctx.fillText('🏢', canvas.width/2, 40);
-            
-            // Draw obstacles and items
-            obstacles.forEach(lane => {
-                lane.obstacles.forEach(obstacle => {
-                    ctx.fillStyle = obstacle.color;
-                    ctx.fillRect(obstacle.x, obstacle.y, obstacle.width, obstacle.height);
-                    ctx.font = '18px Arial';
-                    ctx.textAlign = 'center';
-                    ctx.fillText(obstacle.symbol, obstacle.x + obstacle.width/2, obstacle.y + obstacle.height/2 + 6);
-                });
-                
-                lane.items.forEach(item => {
-                    ctx.fillStyle = item.color;
-                    ctx.fillRect(item.x, item.y, item.width, item.height);
-                    ctx.font = '18px Arial';
-                    ctx.textAlign = 'center';
-                    ctx.fillText(item.symbol, item.x + item.width/2, item.y + item.height/2 + 6);
-                });
-            });
-            
-            // Draw player (Nick)
-            if (player.invulnerable > 0) {
-                ctx.globalAlpha = Math.sin(Date.now() / 100) * 0.5 + 0.5;
-            }
-            
-            ctx.fillStyle = isOnTrafficIsland() ? '#27ae60' : '#3498db';
-            ctx.fillRect(player.x, player.y, player.width, player.height);
-            ctx.font = '25px Arial';
-            ctx.textAlign = 'center';
-            ctx.fillText('🚶‍♂️', player.x + player.width/2, player.y + player.height/2 + 8);
-            
-            ctx.globalAlpha = 1;
         }
 
-        // Check collisions
-        function checkCollisions() {
-            if (player.invulnerable > 0 || isOnTrafficIsland()) {
-                return;
-            }
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
             
-            obstacles.forEach(lane => {
-                // Check obstacle collisions
-                lane.obstacles.forEach((obstacle, obsIndex) => {
-                    if (player.x < obstacle.x + obstacle.width &&
-                        player.x + player.width > obstacle.x &&
-                        player.y < obstacle.y + obstacle.height &&
-                        player.y + player.height > obstacle.y) {
-                        
-                        playerHit(obstacle.damage);
-                        lane.obstacles.splice(obsIndex, 1);
-                    }
-                });
-                
-                // Check item collisions
-                lane.items.forEach((item, itemIndex) => {
-                    if (player.x < item.x + item.width &&
-                        player.x + player.width > item.x &&
-                        player.y < item.y + item.height &&
-                        player.y + item.height > item.y) {
-                        
-                        playerHeal(item.heal);
-                        lane.items.splice(itemIndex, 1);
-                    }
-                });
-            });
+            drawBackground();
+            
+            boats.forEach(boat => boat.draw());
+            interceptors.forEach(interceptor => interceptor.draw());
+            particles.forEach(particle => particle.draw());
+            drawPlayer();
         }
 
-        // Player hit
-        function playerHit(damage) {
-            gameState.hp -= damage;
-            player.invulnerable = 120; // 2 seconds at 60fps
-            gameState.score = Math.max(0, gameState.score - 10);
-            
-            updateDisplay();
-            
-            if (gameState.hp <= 0) {
-                endGame("Nick's HP dropped to zero on the mean streets of the Yookay!");
-            }
-        }
-
-        // Player heal
-        function playerHeal(healAmount) {
-            gameState.hp = Math.min(gameState.maxHp, gameState.hp + healAmount);
-            gameState.score += 20;
-            updateDisplay();
-        }
-
-        // Handle input
-        const keys = {};
-        window.addEventListener('keydown', (e) => keys[e.key] = true);
-        window.addEventListener('keyup', (e) => keys[e.key] = false);
-
-        // Update player
-        function updatePlayer() {
-            if (player.invulnerable > 0) player.invulnerable--;
-            
-            if (keys['ArrowLeft'] && player.x > 0) player.x -= player.speed;
-            if (keys['ArrowRight'] && player.x < canvas.width - player.width) player.x += player.speed;
-            if (keys['ArrowUp'] && player.y > 0) player.y -= player.speed;
-            if (keys['ArrowDown'] && player.y < canvas.height - player.height) player.y += player.speed;
-        }
-
-        // Check win condition
-        function checkWin() {
-            if (player.y <= 60) {
-                const bonus = gameState.hp + (gameState.level * 50);
-                gameState.score += bonus;
-                
-                document.getElementById('levelBonus').textContent = bonus;
-                document.getElementById('levelComplete').style.display = 'block';
-                gameState.paused = true;
-            }
-        }
-
-        // Next street
-        function nextStreet() {
-            gameState.level++;
-            gameState.currentStreet = (gameState.currentStreet + 1) % streets.length;
-            
-            if (gameState.level > 8) {
-                endGame("Nick conquered all 8 Yookay streets! What a legend!");
-                return;
-            }
-            
-            player.x = canvas.width / 2;
-            player.y = canvas.height - 50;
-            
-            createObstacles();
-            createTrafficIslands();
-            updateDisplay();
-            
-            document.getElementById('levelComplete').style.display = 'none';
-            gameState.paused = false;
-        }
-
-        // Update display
-        function updateDisplay() {
+        function updateHUD() {
             document.getElementById('score').textContent = gameState.score;
+            document.getElementById('intercepted').textContent = gameState.intercepted;
+            document.getElementById('peopleIntercepted').textContent = gameState.peopleIntercepted;
+            document.getElementById('peopleEscaped').textContent = gameState.peopleEscaped;
             document.getElementById('level').textContent = gameState.level;
-            document.getElementById('hp').textContent = gameState.hp;
-            document.getElementById('streetName').textContent = streets[gameState.currentStreet];
-            
-            const hpDisplay = document.getElementById('hpDisplay');
-            if (gameState.hp <= 30) {
-                hpDisplay.classList.add('low');
-            } else {
-                hpDisplay.classList.remove('low');
-            }
+            document.getElementById('lives').textContent = gameState.lives;
+            document.getElementById('weaponLevel').textContent = gameState.weaponLevel;
         }
 
-        // End game
-        function endGame(message) {
+        function endGame() {
             gameState.gameOver = true;
-            document.getElementById('gameOverMessage').textContent = message;
             document.getElementById('finalScore').textContent = gameState.score;
+            document.getElementById('finalIntercepted').textContent = gameState.peopleIntercepted;
             document.getElementById('gameOver').style.display = 'block';
         }
 
-        // Restart game
         function restartGame() {
             gameState = {
                 score: 0,
+                intercepted: 0,
+                escaped: 0,
+                peopleIntercepted: 0,
+                peopleEscaped: 0,
                 level: 1,
-                hp: 100,
-                maxHp: 100,
-                gameOver: false,
+                lives: 3,
                 paused: false,
-                currentStreet: 0
+                gameOver: false,
+                lastTime: 0,
+                weaponLevel: 1,
+                interceptorCooldown: 0
             };
+            
+            boats.length = 0;
+            interceptors.length = 0;
+            particles.length = 0;
             
             player.x = canvas.width / 2;
             player.y = canvas.height - 50;
-            player.invulnerable = 0;
-            
-            createObstacles();
-            createTrafficIslands();
-            updateDisplay();
             
             document.getElementById('gameOver').style.display = 'none';
-            document.getElementById('levelComplete').style.display = 'none';
+            gameLoop();
         }
 
-        // Main game loop
-        function gameLoop() {
-            if (!gameState.gameOver && !gameState.paused) {
-                updatePlayer();
-                updateObstacles();
-                checkCollisions();
-                checkWin();
+        // Input handling
+        const keys = {};
+        
+        document.addEventListener('keydown', (e) => {
+            keys[e.key] = true;
+            
+            if (e.key === ' ') {
+                e.preventDefault();
+                if (!gameState.gameOver && !gameState.paused && gameState.interceptorCooldown === 0) {
+                    // Fire multiple interceptors based on weapon level
+                    const positions = [];
+                    switch (gameState.weaponLevel) {
+                        case 1:
+                            positions.push(0);
+                            gameState.interceptorCooldown = 15;
+                            break;
+                        case 2:
+                            positions.push(-8, 8);
+                            gameState.interceptorCooldown = 12;
+                            break;
+                        case 3:
+                            positions.push(-12, 0, 12);
+                            gameState.interceptorCooldown = 10;
+                            break;
+                        case 4:
+                            positions.push(-15, -5, 5, 15);
+                            gameState.interceptorCooldown = 8;
+                            break;
+                    }
+                    
+                    positions.forEach(offset => {
+                        interceptors.push(new Interceptor(player.x + player.width/2 + offset, player.y));
+                    });
+                }
             }
-            drawGame();
+            
+            if (e.key === 'Escape') {
+                gameState.paused = !gameState.paused;
+            }
+        });
+        
+        document.addEventListener('keyup', (e) => {
+            keys[e.key] = false;
+        });
+
+        function handleInput() {
+            if (keys['ArrowLeft'] || keys['a'] || keys['A']) {
+                player.x -= player.speed;
+            }
+            if (keys['ArrowRight'] || keys['d'] || keys['D']) {
+                player.x += player.speed;
+            }
+            if (keys['ArrowUp'] || keys['w'] || keys['W']) {
+                player.y -= player.speed;
+            }
+            if (keys['ArrowDown'] || keys['s'] || keys['S']) {
+                player.y += player.speed;
+            }
+        }
+
+        function gameLoop() {
+            if (gameState.gameOver) return;
+            
+            if (!gameState.paused) {
+                handleInput();
+                spawnBoat();
+                updatePlayer();
+                updateBoats();
+                updateInterceptors();
+                updateParticles();
+                updateLevel();
+            }
+            
+            draw();
+            updateHUD();
+            
             requestAnimationFrame(gameLoop);
         }
 
-        // Initialize game
-        createObstacles();
-        createTrafficIslands();
-        updateDisplay();
+        // Start the game
         gameLoop();
     </script>
 </body>
+</div>
 </html>
