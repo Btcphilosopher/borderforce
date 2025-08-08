@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Coastal Defense</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(180deg, #87CEEB 0%, #4682B4 100%);
+            font-family: 'Courier New', monospace;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            overflow: hidden;
+        }
+
+        .game-container {
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid #fff;
+            border-radius: 10px;
+            padding: 20px;
+            backdrop-filter: blur(10px);
+        }
+
+        #gameCanvas {
+            border: 2px solid #2c3e50;
+            background: linear-gradient(180deg, #87CEEB 0%, #1e3a8a 50%, #0f172a 100%);
+            display: block;
+            margin: 0 auto;
+        }
+
+        .hud {
+            color: white;
+            text-align: center;
+            margin: 10px 0;
+            font-size: 18px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+        }
+
+        .controls {
+            color: white;
+            text-align: center;
+            margin-top: 15px;
+            font-size: 12px;
+            opacity: 0.8;
+        }
+
+        .game-over {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.9);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            display: none;
+        }
+
+        .restart-btn {
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 10px;
+            font-size: 16px;
+        }
+
+        .restart-btn:hover {
+            background: #2980b9;
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <div class="hud">
+            <div>Score: <span id="score">0</span> | Boats: <span id="intercepted">0</span> | People: <span id="peopleIntercepted">0</span> | Escaped: <span id="peopleEscaped">0</span></div>
+            <div>Level: <span id="level">1</span> | Lives: <span id="lives">3</span> | Weapon Lvl: <span id="weaponLevel">1</span></div>
+        </div>
+        
+        <canvas id="gameCanvas" width="800" height="600"></canvas>
+        
+        <div class="controls">
+            Use ARROW KEYS or WASD to move your patrol boat | SPACE to deploy interceptor | ESC to pause
+        </div>
+    </div>
+
+    <div class="game-over" id="gameOver">
+        <h2>Mission Complete!</h2>
+        <p>Final Score: <span id="finalScore">0</span></p>
+        <p>People Intercepted: <span id="finalIntercepted">0</span></p>
+        <button class="restart-btn" onclick="restartGame()">Start New Mission</button>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+
+        let gameState = {
+            score: 0,
+            intercepted: 0,
+            escaped: 0,
+            level: 1,
+            lives: 3,
+            paused: false,
+            gameOver: false,
+            lastTime: 0
+        };
+
+        const player = {
+            x: canvas.width / 2,
+            y: canvas.height - 50,
+            width: 40,
+            height: 20,
+            speed: 5,
+            color: '#e74c3c'
+        };
+
+        const boats = [];
+        const interceptors = [];
+        const particles = [];
+
+        class Boat {
+            constructor() {
+                this.x = Math.random() * (canvas.width - 60);
+                this.y = -50;
+                
+                // Different boat sizes and passenger counts
+                const boatTypes = [
+                    { width: 20, height: 12, passengers: 3, color: '#8b4513', speed: 0.5 },  // Small dinghy
+                    { width: 30, height: 18, passengers: 8, color: '#a0522d', speed: 0.7 },  // Medium boat
+                    { width: 45, height: 25, passengers: 15, color: '#654321', speed: 0.4 }, // Large boat
+                    { width: 55, height: 30, passengers: 20, color: '#5d4037', speed: 0.3 }  // Very large boat
+                ];
+                
+                const type = boatTypes[Math.floor(Math.random() * boatTypes.length)];
+                this.width = type.width;
+                this.height = type.height;
+                this.passengers = type.passengers;
+                this.originalPassengers = type.passengers;
+                this.color = type.color;
+                this.baseSpeed = type.speed;
+                this.speed = this.baseSpeed + (Math.random() * 0.3) + (gameState.level * 0.1);
+                this.intercepted = false;
+                this.sinking = false;
+                this.sinkTime = 0;
+            }
+
+            update() {
+                if (this.sinking) {
+                    this.sinkTime++;
+                    this.y += 0.5; // Slow sink
+                    if (this.sinkTime > 60) {
+                        return 'sunk';
+                    }
+                    return 'sinking';
+                }
+                
+                this.y += this.speed;
+                
+                // Check if boat escaped
+                if (this.y > canvas.height) {
+                    if (!this.intercepted) {
+                        gameState.peopleEscaped += this.passengers;
+                    }
+                    return 'escaped';
+                }
+                return 'active';
+            }
+
+            draw() {
+                if (this.intercepted && !this.sinking) return;
+                
+                // Boat body
+                ctx.fillStyle = this.sinking ? '#2c3e50' : this.color;
+                const sinkOffset = this.sinking ? (this.sinkTime / 60) * (this.height / 2) : 0;
+                ctx.fillRect(this.x, this.y + sinkOffset, this.width, this.height - sinkOffset);
+                
+                if (!this.sinking) {
+                    // Cabin details
+                    ctx.fillStyle = '#654321';
+                    ctx.fillRect(this.x + this.width * 0.2, this.y + this.height * 0.2, this.width * 0.6, this.height * 0.5);
+                    
+                    // Show passenger count
+                    ctx.fillStyle = 'white';
+                    ctx.font = '10px Arial';
+                    ctx.textAlign = 'center';
+                    ctx.fillText(this.passengers, this.x + this.width/2, this.y + this.height/2 + 3);
+                }
+                
+                // Wake effect (reduced when sinking)
+                if (!this.sinking || this.sinkTime < 30) {
+                    ctx.strokeStyle = `rgba(255, 255, 255, ${this.sinking ? 0.1 : 0.3})`;
+                    ctx.lineWidth = 2;
+                    ctx.beginPath();
+                    ctx.moveTo(this.x - 5, this.y + this.height + 5);
+                    ctx.lineTo(this.x + this.width + 5, this.y + this.height + 10);
+                    ctx.stroke();
+                }
+            }
+        }
+
+        class Interceptor {
+            constructor(x, y) {
+                this.x = x;
+                this.y = y;
+                this.width = 8;
+                this.height = 15;
+                this.speed = 8;
+                this.active = true;
+            }
+
+            update() {
+                this.y -= this.speed;
+                if (this.y < -this.height) {
+                    this.active = false;
+                }
+            }
+
+            draw() {
+                if (!this.active) return;
+                
+                ctx.fillStyle = '#f39c12';
+                ctx.fillRect(this.x - this.width/2, this.y, this.width, this.height);
+                
+                // Trail effect
+                ctx.fillStyle = 'rgba(243, 156, 18, 0.5)';
+                ctx.fillRect(this.x - this.width/4, this.y + this.height, this.width/2, 10);
+            }
+        }
+
+        class Particle {
+            constructor(x, y, color) {
+                this.x = x;
+                this.y = y;
+                this.vx = (Math.random() - 0.5) * 4;
+                this.vy = (Math.random() - 0.5) * 4;
+                this.life = 30;
+                this.maxLife = 30;
+                this.color = color;
+            }
+
+            update() {
+                this.x += this.vx;
+                this.y += this.vy;
+                this.life--;
+                return this.life > 0;
+            }
+
+            draw() {
+                const alpha = this.life / this.maxLife;
+                ctx.save();
+                ctx.globalAlpha = alpha;
+                ctx.fillStyle = this.color;
+                ctx.fillRect(this.x, this.y, 3, 3);
+                ctx.restore();
+            }
+        }
+
+        function spawnBoat() {
+            // Much lower spawn rate to start easier
+            const spawnChance = 0.005 + (gameState.level * 0.003);
+            if (Math.random() < spawnChance) {
+                boats.push(new Boat());
+            }
+        }
+
+        function updatePlayer() {
+            // Movement handled by key states
+            if (player.x < 0) player.x = 0;
+            if (player.x > canvas.width - player.width) player.x = canvas.width - player.width;
+            if (player.y < canvas.height * 0.7) player.y = canvas.height * 0.7;
+            if (player.y > canvas.height - player.height) player.y = canvas.height - player.height;
+        }
+
+        function updateBoats() {
+            for (let i = boats.length - 1; i >= 0; i--) {
+                const boat = boats[i];
+                const status = boat.update();
+                
+                if (status === 'escaped' && !boat.intercepted) {
+                    gameState.escaped++;
+                    gameState.lives--;
+                    boats.splice(i, 1);
+                    
+                    // Add red particles for escaped boat
+                    for (let j = 0; j < 10; j++) {
+                        particles.push(new Particle(boat.x + boat.width/2, canvas.height, '#e74c3c'));
+                    }
+                    
+                    if (gameState.lives <= 0) {
+                        endGame();
+                    }
+                } else if (status === 'sunk' || boat.y > canvas.height + 50) {
+                    boats.splice(i, 1);
+                }
+            }
+        }
+
+        function updateInterceptors() {
+            // Update cooldown
+            if (gameState.interceptorCooldown > 0) {
+                gameState.interceptorCooldown--;
+            }
+            
+            for (let i = interceptors.length - 1; i >= 0; i--) {
+                const interceptor = interceptors[i];
+                interceptor.update();
+                
+                if (!interceptor.active) {
+                    interceptors.splice(i, 1);
+                    continue;
+                }
+                
+                // Check collision with boats
+                for (let j = boats.length - 1; j >= 0; j--) {
+                    const boat = boats[j];
+                    if (boat.intercepted || boat.sinking) continue;
+                    
+                    if (interceptor.x > boat.x && interceptor.x < boat.x + boat.width &&
+                        interceptor.y > boat.y && interceptor.y < boat.y + boat.height) {
+                        
+                        boat.intercepted = true;
+                        boat.sinking = true;
+                        interceptor.active = false;
+                        
+                        gameState.intercepted++;
+                        gameState.peopleIntercepted += boat.passengers;
+                        gameState.score += boat.passengers * 10 + (gameState.level * 5);
+                        
+                        // Add explosion particles
+                        for (let k = 0; k < 15; k++) {
+                            particles.push(new Particle(boat.x + boat.width/2, boat.y + boat.height/2, '#f39c12'));
+                        }
+                        
+                        break;
+                    }
+                }
+            }
+        }
+
+        function updateParticles() {
+            for (let i = particles.length - 1; i >= 0; i--) {
+                if (!particles[i].update()) {
+                    particles.splice(i, 1);
+                }
+            }
+        }
+
+        function updateLevel() {
+            const newLevel = Math.floor(gameState.peopleIntercepted / 50) + 1;
+            if (newLevel > gameState.level) {
+                gameState.level = newLevel;
+                gameState.score += 1000; // Level bonus
+                
+                // Weapon upgrades every few levels
+                if (gameState.level % 3 === 0) {
+                    gameState.weaponLevel = Math.min(gameState.weaponLevel + 1, 4);
+                }
+            }
+        }
+
+        function drawPlayer() {
+            ctx.fillStyle = player.color;
+            ctx.fillRect(player.x, player.y, player.width, player.height);
+            
+            // Add details to make it look like a patrol boat
+            ctx.fillStyle = '#c0392b';
+            ctx.fillRect(player.x + 5, player.y + 3, player.width - 10, player.height - 6);
+            
+            // Bridge
+            ctx.fillStyle = '#2c3e50';
+            ctx.fillRect(player.x + 15, player.y - 5, 10, 8);
+            
+            // Weapon indicators based on weapon level
+            ctx.fillStyle = '#f39c12';
+            for (let i = 0; i < gameState.weaponLevel; i++) {
+                ctx.fillRect(player.x + 8 + (i * 6), player.y - 2, 4, 2);
+            }
+        }
+
+        function drawBackground() {
+            // Water waves
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
+            ctx.lineWidth = 1;
+            for (let y = 0; y < canvas.height; y += 20) {
+                ctx.beginPath();
+                ctx.moveTo(0, y);
+                for (let x = 0; x < canvas.width; x += 40) {
+                    ctx.quadraticCurveTo(x + 20, y + Math.sin((Date.now() / 1000 + x / 100)) * 3, x + 40, y);
+                }
+                ctx.stroke();
+            }
+        }
+
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            drawBackground();
+            
+            boats.forEach(boat => boat.draw());
+            interceptors.forEach(interceptor => interceptor.draw());
+            particles.forEach(particle => particle.draw());
+            drawPlayer();
+        }
+
+        function updateHUD() {
+            document.getElementById('score').textContent = gameState.score;
+            document.getElementById('intercepted').textContent = gameState.intercepted;
+            document.getElementById('peopleIntercepted').textContent = gameState.peopleIntercepted;
+            document.getElementById('peopleEscaped').textContent = gameState.peopleEscaped;
+            document.getElementById('level').textContent = gameState.level;
+            document.getElementById('lives').textContent = gameState.lives;
+            document.getElementById('weaponLevel').textContent = gameState.weaponLevel;
+        }
+
+        function endGame() {
+            gameState.gameOver = true;
+            document.getElementById('finalScore').textContent = gameState.score;
+            document.getElementById('finalIntercepted').textContent = gameState.peopleIntercepted;
+            document.getElementById('gameOver').style.display = 'block';
+        }
+
+        function restartGame() {
+            gameState = {
+                score: 0,
+                intercepted: 0,
+                escaped: 0,
+                peopleIntercepted: 0,
+                peopleEscaped: 0,
+                level: 1,
+                lives: 3,
+                paused: false,
+                gameOver: false,
+                lastTime: 0,
+                weaponLevel: 1,
+                interceptorCooldown: 0
+            };
+            
+            boats.length = 0;
+            interceptors.length = 0;
+            particles.length = 0;
+            
+            player.x = canvas.width / 2;
+            player.y = canvas.height - 50;
+            
+            document.getElementById('gameOver').style.display = 'none';
+            gameLoop();
+        }
+
+        // Input handling
+        const keys = {};
+        
+        document.addEventListener('keydown', (e) => {
+            keys[e.key] = true;
+            
+            if (e.key === ' ') {
+                e.preventDefault();
+                if (!gameState.gameOver && !gameState.paused && gameState.interceptorCooldown === 0) {
+                    // Fire multiple interceptors based on weapon level
+                    const positions = [];
+                    switch (gameState.weaponLevel) {
+                        case 1:
+                            positions.push(0);
+                            gameState.interceptorCooldown = 15;
+                            break;
+                        case 2:
+                            positions.push(-8, 8);
+                            gameState.interceptorCooldown = 12;
+                            break;
+                        case 3:
+                            positions.push(-12, 0, 12);
+                            gameState.interceptorCooldown = 10;
+                            break;
+                        case 4:
+                            positions.push(-15, -5, 5, 15);
+                            gameState.interceptorCooldown = 8;
+                            break;
+                    }
+                    
+                    positions.forEach(offset => {
+                        interceptors.push(new Interceptor(player.x + player.width/2 + offset, player.y));
+                    });
+                }
+            }
+            
+            if (e.key === 'Escape') {
+                gameState.paused = !gameState.paused;
+            }
+        });
+        
+        document.addEventListener('keyup', (e) => {
+            keys[e.key] = false;
+        });
+
+        function handleInput() {
+            if (keys['ArrowLeft'] || keys['a'] || keys['A']) {
+                player.x -= player.speed;
+            }
+            if (keys['ArrowRight'] || keys['d'] || keys['D']) {
+                player.x += player.speed;
+            }
+            if (keys['ArrowUp'] || keys['w'] || keys['W']) {
+                player.y -= player.speed;
+            }
+            if (keys['ArrowDown'] || keys['s'] || keys['S']) {
+                player.y += player.speed;
+            }
+        }
+
+        function gameLoop() {
+            if (gameState.gameOver) return;
+            
+            if (!gameState.paused) {
+                handleInput();
+                spawnBoat();
+                updatePlayer();
+                updateBoats();
+                updateInterceptors();
+                updateParticles();
+                updateLevel();
+            }
+            
+            draw();
+            updateHUD();
+            
+            requestAnimationFrame(gameLoop);
+        }
+
+        // Start the game
+        gameLoop();
+    </script>
+</body>
+</html>
